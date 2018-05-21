@@ -72,6 +72,7 @@ function readMessage(data) {
     var msg = JSON.parse(data.val().message);
     var sender = data.val().sender;
     var receiver = data.val().receiver;
+    console.log("Message from " + sender + " to " + receiver);
     if (receiver === yourId) {
         if (msg.ice !== undefined)
             pc.addIceCandidate(new RTCIceCandidate(msg.ice));
