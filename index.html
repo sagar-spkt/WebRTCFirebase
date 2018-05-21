@@ -1,19 +1,25 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="utf-8"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" type="text/css" href="{% static "css/style.css" %}">
 </head>
 <body onload="showMyFace()">
+<form id="loginForm" onsubmit="return login(this)">
+	<input type="text" name="username" id="username" placeholder="Enter username"/>
+	<input type="submit" name="login_submit" value="Log In"/>
+</form>
 <video id="yourVideo" autoplay muted playsinline></video>
 <video id="friendsVideo" autoplay playsinline></video>
 <br/>
+<input type="text" name="callerId" id="callerId" placeholder="Enter username to call"/>
 <button onclick="showFriendsFace()" type="button" class="btn btn-primary btn-lg">
 <span class="glyphicon glyphicon-facetime-video" aria-hidden="true"></span>Call
 </button>
 
 <script type="text/javascript" src="https://www.gstatic.com/firebasejs/5.0.3/firebase.js"></script>
-<script type="text/javascript" src="js/webrtc.js"></script>
+<script type="text/javascript" src="{% static "js/webrtc.js" %}"></script>
 </body>
 </html>

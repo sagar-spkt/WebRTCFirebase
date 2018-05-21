@@ -1,18 +1,32 @@
 // Initialize Firebase
 var config = {
-apiKey: "AIzaSyDqLxmzedBglXlxrqLCnnKIGwKU4mdqbQA",
-authDomain: "webrtc-learn.firebaseapp.com",
-databaseURL: "https://webrtc-learn.firebaseio.com",
-projectId: "webrtc-learn",
-storageBucket: "webrtc-learn.appspot.com",
-messagingSenderId: "731159768520"
+    apiKey: "AIzaSyDqLxmzedBglXlxrqLCnnKIGwKU4mdqbQA",
+    authDomain: "webrtc-learn.firebaseapp.com",
+    databaseURL: "https://webrtc-learn.firebaseio.com",
+    projectId: "webrtc-learn",
+    storageBucket: "webrtc-learn.appspot.com",
+    messagingSenderId: "731159768520"
 };
 firebase.initializeApp(config);
 
 var database = firebase.database().ref();
 var yourVideo = document.getElementById("yourVideo");
 var friendsVideo = document.getElementById("friendsVideo");
-var yourId = Math.floor(Math.random()*1000000000);
+var callIdField = document.getElementById("callerId");
+let yourId;
+let callId;
+
+function login(form) {
+    if(form.username.value === "" || form.username.value === undefined){
+        alert("Enter valid username");
+        return false;
+    }
+	yourId = form.username.value;
+    form.username.value = yourId + "(logged in)";
+    form.username.disabled = true;
+    form.login_submit.disabled = true;
+    return false; //
+}
 
 var servers = {'iceServers': [
         {'urls': 'stun:stun.services.mozilla.com'},
@@ -20,9 +34,10 @@ var servers = {'iceServers': [
         {'urls': 'turn:numb.viagenie.ca',  'credential': 'sagar12345', 'username': 'spkt.sagar@gmail.com'}
     ]};
 
-function sendMessage(senderId, data) {
+function sendMessage(senderId, receiverId, data) {
     var msg = database.push({
         sender: senderId,
+        receiver: receiverId,
         message: data
     });
     msg.remove();
@@ -38,33 +53,36 @@ function showMyFace() {
 
 var pc = new RTCPeerConnection(servers);
 pc.onicecandidate = (event => event.candidate ?
-    sendMessage(yourId, JSON.stringify({
+    sendMessage(yourId, callId, JSON.stringify({
         'ice': event.candidate
     })): console.log("Sent All Ice"));
 pc.onaddstream = (event => friendsVideo.srcObject = event.stream);
 
 function showFriendsFace() {
+    callId = callIdField.value;
     pc.createOffer()
         .then(offer => pc.setLocalDescription(offer))
-        .then(() => sendMessage(yourId, JSON.stringify({
+        .then(() => sendMessage(yourId, callId, JSON.stringify({
             'sdp': pc.localDescription
         })));
+    return false;
 }
 
 function readMessage(data) {
     var msg = JSON.parse(data.val().message);
     var sender = data.val().sender;
-    if (sender != yourId) {
-        if (msg.ice != undefined)
+    var receiver = data.val().receiver;
+    if (receiver === yourId) {
+        if (msg.ice !== undefined)
             pc.addIceCandidate(new RTCIceCandidate(msg.ice));
-        else if (msg.sdp.type == "offer")
+        else if (msg.sdp.type === "offer")
             pc.setRemoteDescription(new RTCSessionDescription(msg.sdp))
                 .then(() => pc.createAnswer())
                 .then(answer => pc.setLocalDescription(answer))
-                .then(() => sendMessage(yourId, JSON.stringify({
+                .then(() => sendMessage(yourId, sender, JSON.stringify({
                     'sdp': pc.localDescription
                 })));
-        else if (msg.sdp.type == "answer")
+        else if (msg.sdp.type === "answer")
             pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
     }
 }
